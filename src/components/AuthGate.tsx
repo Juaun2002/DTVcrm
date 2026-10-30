@@ -55,8 +55,12 @@ function Login() {
     setOcupado(true);
     const { error } = await entrar(email.trim());
     setOcupado(false);
-    if (error) setErro("Não foi possível enviar o link. Confira o e-mail e tente de novo.");
-    else setEnviado(true);
+    if (!error) return setEnviado(true);
+    if (error.status === 429 || error.code === "over_email_send_rate_limit")
+      setErro("Limite de e-mails do Supabase atingido. Espere cerca de 1 hora e tente uma vez só.");
+    else if (error.status === 500)
+      setErro(`O Supabase não conseguiu enviar o e-mail (confira as configurações de SMTP). Detalhe: ${error.message}`);
+    else setErro(`Não foi possível enviar o link. Detalhe: ${error.message}`);
   }
 
   return (
