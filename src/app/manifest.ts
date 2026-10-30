@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "CRM · Ilha de Mauí",
-    short_name: "CRM",
+    name: "Do Toque à Visita",
+    short_name: "DTV",
     description: "Follow-ups do dia pelo WhatsApp",
     start_url: "/",
     display: "standalone",

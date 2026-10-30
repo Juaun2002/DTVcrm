@@ -12,9 +12,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "CRM · Ilha de Mauí",
+  title: "Do Toque à Visita",
   description: "Follow-ups do dia pelo WhatsApp",
-  appleWebApp: { capable: true, title: "CRM", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "DTV", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -61,7 +61,7 @@ function Login() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-6">
-      <h1 className="text-3xl font-bold">CRM</h1>
+      <h1 className="text-3xl font-bold">Do Toque à Visita</h1>
       <p className="mb-8 text-stone-500">Ilha de Mauí</p>
 
       {enviado ? (
