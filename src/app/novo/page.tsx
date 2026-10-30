@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { LeadForm } from "@/components/LeadForm";
-import { Carregando } from "@/components/Nav";
 import { useToast } from "@/components/Toast";
+import { Carregando } from "@/components/ui";
 import { salvarLead } from "@/lib/cadencia";
 import { useData } from "@/lib/store";
 
@@ -15,7 +15,8 @@ export default function Novo() {
 
   return (
     <>
-      <h1 className="mb-5 text-2xl font-bold">Novo lead</h1>
+      <h1 className="text-3xl font-black tracking-tight">Novo lead</h1>
+      <p className="mb-6 text-stone-500">Cadastre e a cadência começa sozinha.</p>
       <LeadForm
         onSalvar={(lead) => {
           salvarLead(lead);

@@ -27,12 +27,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <Ctx.Provider value={show}>
       {children}
       {msg && (
-        <div className="fixed inset-x-0 bottom-20 z-50 flex justify-center px-4">
-          <div className="flex w-full max-w-md items-center justify-between gap-3 rounded-xl bg-stone-900 px-4 py-3 text-sm text-white shadow-lg">
+        <div className="fixed inset-x-0 bottom-28 z-50 flex justify-center px-4">
+          <div className="flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-stone-900/95 px-4 py-3.5 text-sm text-white shadow-2xl backdrop-blur">
             <span>{msg.texto}</span>
             {msg.desfazer && (
               <button
-                className="font-semibold text-emerald-300"
+                className="font-bold text-teal-300"
                 onClick={() => {
                   msg.desfazer?.();
                   setMsg(null);

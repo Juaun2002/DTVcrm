@@ -21,7 +21,7 @@ Abra http://localhost:3000.
 ## Onde ficam os dados
 
 - **Sem `.env.local`:** modo local, só no navegador (`localStorage`, chave `crm:v1`).
-- **Com Supabase configurado:** na nuvem, com login por link no e-mail. Sincroniza celular e computador.
+- **Com Supabase configurado:** na nuvem, com login por e-mail e senha. Sincroniza celular e computador.
   No primeiro login, o que estava no navegador é enviado para a nuvem.
 
 ### Ligar o Supabase
@@ -30,10 +30,14 @@ Abra http://localhost:3000.
 2. **SQL Editor → New query**: cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
 3. **Project Settings → API**: copie a *Project URL* e a chave *publishable* (ou *anon*).
 4. Copie `.env.example` para `.env.local` e preencha os dois valores. Nunca use a chave *secret*/*service_role*.
-5. Reinicie o `npm run dev`, entre com seu e-mail e clique no link recebido.
-6. Depois do seu primeiro login: **Authentication → Sign In / Providers → desative "Allow new users to sign up"**,
-   para ninguém mais criar conta no seu CRM.
-7. Ao publicar o site, adicione o endereço dele em **Authentication → URL Configuration** (Site URL e Redirect URLs).
+5. **Authentication → Users → Add user → Create new user**: seu e-mail e uma senha, marcando **Auto Confirm User**.
+6. **Authentication → Sign In / Providers**: desative **"Allow new users to sign up"**, para ninguém mais criar conta.
+7. Reinicie o `npm run dev` e entre com e-mail e senha. "Manter conectado" deixa a sessão salva no aparelho.
+
+### Publicar (Vercel)
+
+Importe o repositório na Vercel e cadastre as mesmas duas variáveis do `.env.local` em **Environment Variables**.
+Cada `git push` na `main` publica sozinho.
 
 ## Estrutura
 

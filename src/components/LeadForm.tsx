@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { botaoPrimario, campo } from "@/components/ui";
 import { formatarTelefone, normalizarTelefone } from "@/lib/cadencia";
 import { hoje } from "@/lib/dates";
 import { uid } from "@/lib/store";
@@ -8,8 +9,13 @@ import type { Lead, Tipologia } from "@/lib/types";
 
 const ORIGENS = ["Instagram", "Facebook", "Google", "Site", "Indicação", "Plantão", "Outro"];
 
-export const campo =
-  "w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-base outline-none focus:border-emerald-600";
+function Rotulo({ children, opcional }: { children: React.ReactNode; opcional?: boolean }) {
+  return (
+    <span className="mb-1.5 block text-sm font-semibold text-stone-700">
+      {children} {opcional && <span className="font-normal text-stone-400">(opcional)</span>}
+    </span>
+  );
+}
 
 export function LeadForm({ inicial, onSalvar }: { inicial?: Lead; onSalvar: (l: Lead) => void }) {
   const [nome, setNome] = useState(inicial?.nome ?? "");
@@ -41,14 +47,20 @@ export function LeadForm({ inicial, onSalvar }: { inicial?: Lead; onSalvar: (l: 
   }
 
   return (
-    <form onSubmit={enviar} className="space-y-4">
+    <form onSubmit={enviar} className="space-y-5">
       <label className="block">
-        <span className="mb-1 block text-sm font-medium">Nome</span>
-        <input className={campo} value={nome} onChange={(e) => setNome(e.target.value)} autoFocus={!inicial} />
+        <Rotulo>Nome</Rotulo>
+        <input
+          className={campo}
+          placeholder="Nome do lead"
+          value={nome}
+          onChange={(e) => setNome(e.target.value)}
+          autoFocus={!inicial}
+        />
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium">WhatsApp (com DDD)</span>
+        <Rotulo>WhatsApp com DDD</Rotulo>
         <input
           className={campo}
           inputMode="tel"
@@ -59,38 +71,49 @@ export function LeadForm({ inicial, onSalvar }: { inicial?: Lead; onSalvar: (l: 
       </label>
 
       <div>
-        <span className="mb-1 block text-sm font-medium">Interesse</span>
-        <div className="grid grid-cols-2 gap-2">
-          {(["2Q", "3Q"] as const).map((t) => (
+        <Rotulo>Interesse</Rotulo>
+        <div className="grid grid-cols-2 gap-3">
+          {(["2Q", "3Q"] as const).map((t) => {
+            const ativo = tipologia === t;
+            return (
+              <button
+                type="button"
+                key={t}
+                onClick={() => setTipologia(t)}
+                className={`rounded-2xl border-2 p-4 text-left transition ${
+                  ativo ? "border-teal-500 bg-teal-50 shadow-md shadow-teal-600/10" : "border-stone-200 bg-white"
+                }`}
+              >
+                <span className={`block text-3xl font-black ${ativo ? "text-teal-700" : "text-stone-300"}`}>
+                  {t[0]}
+                </span>
+                <span className={`text-sm font-semibold ${ativo ? "text-teal-800" : "text-stone-500"}`}>quartos</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <Rotulo>Origem</Rotulo>
+        <div className="flex flex-wrap gap-2">
+          {ORIGENS.map((o) => (
             <button
               type="button"
-              key={t}
-              onClick={() => setTipologia(t)}
-              className={`rounded-xl border py-3 font-semibold ${
-                tipologia === t
-                  ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                  : "border-stone-300 bg-white text-stone-600"
+              key={o}
+              onClick={() => setOrigem(o)}
+              className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+                origem === o ? "bg-stone-900 text-white" : "bg-white text-stone-600 ring-1 ring-stone-200"
               }`}
             >
-              {t === "2Q" ? "2 quartos" : "3 quartos"}
+              {o}
             </button>
           ))}
         </div>
       </div>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium">Origem</span>
-        <select className={campo} value={origem} onChange={(e) => setOrigem(e.target.value)}>
-          {ORIGENS.map((o) => (
-            <option key={o}>{o}</option>
-          ))}
-        </select>
-      </label>
-
-      <label className="block">
-        <span className="mb-1 block text-sm font-medium">
-          Perfil <span className="font-normal text-stone-400">(opcional)</span>
-        </span>
+        <Rotulo opcional>Perfil</Rotulo>
         <input
           className={campo}
           placeholder="Ex.: casal com filhos, investidor"
@@ -100,15 +123,13 @@ export function LeadForm({ inicial, onSalvar }: { inicial?: Lead; onSalvar: (l: 
       </label>
 
       <label className="block">
-        <span className="mb-1 block text-sm font-medium">Data de entrada</span>
+        <Rotulo>Data de entrada</Rotulo>
         <input type="date" className={campo} value={entrada} onChange={(e) => setEntrada(e.target.value)} />
       </label>
 
-      {erro && <p className="text-sm text-red-600">{erro}</p>}
+      {erro && <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{erro}</p>}
 
-      <button className="w-full rounded-xl bg-emerald-600 py-3.5 font-semibold text-white active:bg-emerald-700">
-        {inicial ? "Salvar" : "Cadastrar lead"}
-      </button>
+      <button className={`${botaoPrimario} w-full`}>{inicial ? "Salvar alterações" : "Cadastrar e começar cadência"}</button>
     </form>
   );
 }

@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Carregando } from "@/components/Nav";
-import { apagarExemplos, dataDoToque, formatarTelefone, proximoToque } from "@/lib/cadencia";
+import { Avatar, Carregando, Chip, ChipTipologia, Icone, Progresso } from "@/components/ui";
+import { apagarExemplos, dataDoToque, formatarTelefone, proximoToque, toquesDe } from "@/lib/cadencia";
 import { formatarData } from "@/lib/dates";
 import { useData } from "@/lib/store";
 import { COR_STATUS, STATUS_LABEL, type Status } from "@/lib/types";
@@ -31,16 +31,24 @@ export default function Leads() {
       (!q || l.nome.toLowerCase().includes(q) || (qDigitos !== "" && l.telefone.includes(qDigitos))),
   );
   const temExemplos = data.leads.some((l) => l.exemplo);
+  const contagem = (s: Status | "todos") => (s === "todos" ? data.leads.length : data.leads.filter((l) => l.status === s).length);
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold">Leads</h1>
+      <div className="mb-5 flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight">Leads</h1>
+          <p className="text-stone-500">
+            {data.leads.length} no total · {contagem("ativo")} em cadência
+          </p>
+        </div>
+      </div>
 
       {temExemplos && (
-        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
-          <span>Há leads de exemplo para você testar.</span>
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl bg-amber-50 p-3 text-sm text-amber-900 ring-1 ring-amber-200">
+          <span>Há leads de exemplo na lista.</span>
           <button
-            className="shrink-0 font-semibold underline"
+            className="shrink-0 font-bold underline"
             onClick={() => confirm("Apagar os leads de exemplo?") && apagarExemplos()}
           >
             Apagar
@@ -48,51 +56,76 @@ export default function Leads() {
         </div>
       )}
 
-      <input
-        className="mb-3 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 outline-none focus:border-emerald-600"
-        placeholder="Buscar por nome ou telefone"
-        value={busca}
-        onChange={(e) => setBusca(e.target.value)}
-      />
+      <div className="relative mb-3">
+        <Icone nome="busca" className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-stone-400" />
+        <input
+          className="w-full rounded-2xl border border-stone-200 bg-white py-3.5 pr-4 pl-12 shadow-sm outline-none transition focus:border-teal-500 focus:ring-4 focus:ring-teal-500/15"
+          placeholder="Buscar por nome ou telefone"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+        />
+      </div>
 
-      <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 mb-5 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none]">
         {FILTROS.map((f) => (
           <button
             key={f.valor}
             onClick={() => setFiltro(f.valor)}
-            className={`shrink-0 rounded-full px-3 py-1.5 text-sm ${
-              filtro === f.valor ? "bg-stone-900 text-white" : "bg-white text-stone-600 ring-1 ring-stone-200"
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold transition ${
+              filtro === f.valor ? "bg-stone-900 text-white shadow-md" : "bg-white text-stone-600 ring-1 ring-stone-200"
             }`}
           >
             {f.label}
+            <span className={`text-xs ${filtro === f.valor ? "text-white/60" : "text-stone-400"}`}>{contagem(f.valor)}</span>
           </button>
         ))}
       </div>
 
       {leads.length === 0 ? (
-        <p className="py-10 text-center text-stone-400">Nenhum lead encontrado.</p>
+        <div className="rounded-[1.75rem] border border-dashed border-stone-300 p-10 text-center">
+          <div className="mx-auto grid size-14 place-items-center rounded-full bg-stone-100 text-stone-400">
+            <Icone nome="pessoas" className="size-7" />
+          </div>
+          <p className="mt-3 font-semibold text-stone-600">
+            {data.leads.length === 0 ? "Nenhum lead ainda" : "Nenhum lead encontrado"}
+          </p>
+          {data.leads.length === 0 && (
+            <Link href="/novo" className="mt-3 inline-flex items-center gap-1 font-semibold text-teal-700">
+              <Icone nome="mais" className="size-4" /> Cadastrar o primeiro
+            </Link>
+          )}
+        </div>
       ) : (
-        <ul className="divide-y divide-stone-200 rounded-2xl border border-stone-200 bg-white">
+        <ul className="space-y-2.5">
           {leads.map((l) => {
             const t = proximoToque(data, l);
+            const total = toquesDe(data, l.tipologia).length;
             return (
               <li key={l.id}>
-                <Link href={`/leads/${l.id}`} className="flex items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{l.nome}</p>
-                    <p className="text-sm text-stone-500">
-                      {l.tipologia} · {formatarTelefone(l.telefone)}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${COR_STATUS[l.status]}`}>
-                      {l.status === "ativo" && !t ? "Cadência concluída" : STATUS_LABEL[l.status]}
-                    </span>
-                    {t && (
-                      <p className="mt-1 text-xs text-stone-400">
-                        D{t.dia} · {formatarData(dataDoToque(data, l, t))}
-                      </p>
-                    )}
+                <Link
+                  href={`/leads/${l.id}`}
+                  className="flex items-center gap-3 rounded-2xl border border-stone-200 bg-white p-3.5 shadow-sm transition active:scale-[0.99]"
+                >
+                  <Avatar nome={l.nome} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate font-bold">{l.nome}</p>
+                      <Chip className={COR_STATUS[l.status]}>
+                        {l.status === "ativo" && !t ? "Concluída" : STATUS_LABEL[l.status]}
+                      </Chip>
+                    </div>
+                    <p className="mt-0.5 text-sm text-stone-500">{formatarTelefone(l.telefone)}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <ChipTipologia t={l.tipologia} />
+                        <Progresso feito={Math.min(l.passo, total)} total={total} />
+                      </div>
+                      {t && (
+                        <span className="text-[11px] font-medium text-stone-400">
+                          D{t.dia} · {formatarData(dataDoToque(data, l, t))}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </Link>
               </li>

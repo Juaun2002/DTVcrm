@@ -12,7 +12,32 @@ import type { Data } from "./types";
  */
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const CHAVE = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-export const supabase = URL && CHAVE ? createClient(URL, CHAVE) : null;
+
+/**
+ * "Manter conectado": a sessão fica no localStorage (sobrevive a fechar o app).
+ * Desmarcado, fica no sessionStorage e some ao fechar a aba.
+ */
+const MANTER = "dtv:manter";
+const naoNavegador = () => typeof window === "undefined";
+const armazenamento = {
+  getItem: (k: string) => (naoNavegador() ? null : (localStorage.getItem(k) ?? sessionStorage.getItem(k))),
+  setItem: (k: string, v: string) => {
+    if (naoNavegador()) return;
+    (localStorage.getItem(MANTER) === "0" ? sessionStorage : localStorage).setItem(k, v);
+  },
+  removeItem: (k: string) => {
+    if (naoNavegador()) return;
+    localStorage.removeItem(k);
+    sessionStorage.removeItem(k);
+  },
+};
+
+export const supabase =
+  URL && CHAVE
+    ? createClient(URL, CHAVE, {
+        auth: { storage: armazenamento, persistSession: true, autoRefreshToken: true },
+      })
+    : null;
 
 const LOCAL = "crm:v1";
 const TABELA = "crm_data";
@@ -157,11 +182,9 @@ export function replace(d: Data) {
   update(() => d);
 }
 
-export async function entrar(email: string) {
-  return supabase!.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: window.location.origin },
-  });
+export async function entrar(email: string, senha: string, manter: boolean) {
+  localStorage.setItem(MANTER, manter ? "1" : "0");
+  return supabase!.auth.signInWithPassword({ email, password: senha });
 }
 
 export async function sair() {

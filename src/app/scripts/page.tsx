@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { campo } from "@/components/LeadForm";
-import { Carregando } from "@/components/Nav";
+import { campo, Carregando, Icone } from "@/components/ui";
 import { toquesDe } from "@/lib/cadencia";
 import { sair, supabase, uid, update, useData, useSnap } from "@/lib/store";
 import type { Config, Tipologia, Toque } from "@/lib/types";
@@ -15,6 +14,8 @@ function salvarConfig(c: Partial<Config>) {
   update((d) => ({ ...d, config: { ...d.config, ...c } }));
 }
 
+const VARIAVEIS = ["{nome}", "{corretora}", "{empreendimento}", "{tipologia}"];
+
 export default function Scripts() {
   const data = useData();
   const [tipologia, setTipologia] = useState<Tipologia>("3Q");
@@ -25,44 +26,53 @@ export default function Scripts() {
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-bold">Scripts</h1>
-      <p className="mb-5 text-sm text-stone-500">
-        Tudo salva sozinho. Use <code className="rounded bg-stone-200 px-1">{"{nome}"}</code>,{" "}
-        <code className="rounded bg-stone-200 px-1">{"{corretora}"}</code>,{" "}
-        <code className="rounded bg-stone-200 px-1">{"{empreendimento}"}</code> e{" "}
-        <code className="rounded bg-stone-200 px-1">{"{tipologia}"}</code> nos textos.
-      </p>
+      <h1 className="text-3xl font-black tracking-tight">Scripts</h1>
+      <p className="mb-5 text-stone-500">Tudo salva sozinho enquanto você digita.</p>
 
-      <div className="mb-6 space-y-3 rounded-2xl border border-stone-200 bg-white p-4">
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium">Seu nome</span>
-          <input className={campo} value={config.corretora} onChange={(e) => salvarConfig({ corretora: e.target.value })} />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-sm font-medium">Empreendimento</span>
-          <input
-            className={campo}
-            value={config.empreendimento}
-            onChange={(e) => salvarConfig({ empreendimento: e.target.value })}
-          />
-        </label>
-        <label className="flex items-center gap-3 text-sm">
+      <section className="mb-6 space-y-4 rounded-[1.75rem] border border-stone-200 bg-white p-5 shadow-sm">
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-stone-700">Seu nome</span>
+            <input className={campo} value={config.corretora} onChange={(e) => salvarConfig({ corretora: e.target.value })} />
+          </label>
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-semibold text-stone-700">Empreendimento</span>
+            <input
+              className={campo}
+              value={config.empreendimento}
+              onChange={(e) => salvarConfig({ empreendimento: e.target.value })}
+            />
+          </label>
+        </div>
+        <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl bg-stone-50 p-3 text-sm">
+          <span className="font-medium text-stone-700">Toque no fim de semana vai para segunda</span>
           <input
             type="checkbox"
-            className="size-5 accent-emerald-600"
+            className="size-5 accent-teal-600"
             checked={config.pularFimDeSemana}
             onChange={(e) => salvarConfig({ pularFimDeSemana: e.target.checked })}
           />
-          Toque que cair no fim de semana vai para segunda
         </label>
-      </div>
+        <div>
+          <p className="mb-1.5 text-xs font-semibold text-stone-400">Variáveis que você pode usar nos textos</p>
+          <div className="flex flex-wrap gap-1.5">
+            {VARIAVEIS.map((v) => (
+              <code key={v} className="rounded-lg bg-teal-50 px-2 py-1 text-xs font-semibold text-teal-700">
+                {v}
+              </code>
+            ))}
+          </div>
+        </div>
+      </section>
 
-      <div className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-stone-200 p-1">
+      <div className="mb-4 grid grid-cols-2 gap-1 rounded-2xl bg-stone-200/70 p-1">
         {(["2Q", "3Q"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTipologia(t)}
-            className={`rounded-lg py-2 text-sm font-semibold ${tipologia === t ? "bg-white shadow-sm" : "text-stone-600"}`}
+            className={`rounded-xl py-2.5 text-sm font-bold transition ${
+              tipologia === t ? "bg-white text-teal-700 shadow-sm" : "text-stone-500"
+            }`}
           >
             {t === "2Q" ? "2 quartos" : "3 quartos"}
           </button>
@@ -83,9 +93,9 @@ export default function Scripts() {
             toques: [...d.toques, { id: uid(), tipologia, dia: ultimo + 7, canal: "whatsapp", texto: "Oi {nome}, " }],
           }));
         }}
-        className="mt-3 w-full rounded-xl border border-dashed border-stone-300 py-3 font-semibold text-stone-600"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-stone-300 py-3.5 font-semibold text-stone-500 transition hover:border-teal-400 hover:text-teal-700"
       >
-        + Adicionar toque
+        <Icone nome="mais" className="size-4" /> Adicionar toque
       </button>
       <p className="mt-3 text-xs text-stone-400">
         Dica: evite apagar ou inserir toques no meio da cadência com leads em andamento — eles seguem pela posição na lista.
@@ -98,38 +108,49 @@ export default function Scripts() {
 
 function EditorToque({ toque }: { toque: Toque }) {
   const [dia, setDia] = useState(String(toque.dia));
+  const whats = toque.canal === "whatsapp";
 
   return (
-    <li className="rounded-2xl border border-stone-200 bg-white p-4">
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-sm font-semibold">D</span>
-        <input
-          className="w-16 rounded-lg border border-stone-300 px-2 py-1.5"
-          inputMode="numeric"
-          value={dia}
-          onChange={(e) => setDia(e.target.value.replace(/\D/g, ""))}
-          onBlur={() => salvarToque({ ...toque, dia: Number(dia) || 0 })}
-        />
-        <select
-          className="rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
-          value={toque.canal}
-          onChange={(e) => salvarToque({ ...toque, canal: e.target.value as Toque["canal"] })}
-        >
-          <option value="whatsapp">WhatsApp</option>
-          <option value="ligacao">Ligação</option>
-        </select>
+    <li className="overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-sm">
+      <div className="flex items-center gap-2 border-b border-stone-100 px-4 py-3">
+        <div className="flex items-center rounded-xl bg-stone-900 pl-2.5 text-sm font-bold text-white">
+          D
+          <input
+            className="w-10 bg-transparent py-1.5 pr-2 pl-0.5 outline-none"
+            inputMode="numeric"
+            value={dia}
+            onChange={(e) => setDia(e.target.value.replace(/\D/g, ""))}
+            onBlur={() => salvarToque({ ...toque, dia: Number(dia) || 0 })}
+            aria-label="Dia do toque"
+          />
+        </div>
+        <div className="flex rounded-xl bg-stone-100 p-0.5 text-xs font-semibold">
+          {(["whatsapp", "ligacao"] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => salvarToque({ ...toque, canal: c })}
+              className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 transition ${
+                toque.canal === c ? (c === "whatsapp" ? "bg-[#25D366] text-white" : "bg-amber-500 text-white") : "text-stone-500"
+              }`}
+            >
+              <Icone nome={c === "whatsapp" ? "chat" : "telefone"} className="size-3.5" />
+              {c === "whatsapp" ? "WhatsApp" : "Ligação"}
+            </button>
+          ))}
+        </div>
         <button
-          className="ml-auto text-sm text-red-600"
+          className="ml-auto grid size-8 place-items-center rounded-full text-stone-400 transition hover:bg-red-50 hover:text-red-600"
+          aria-label="Remover toque"
           onClick={() =>
             confirm(`Remover o toque D${toque.dia}?`) &&
             update((d) => ({ ...d, toques: d.toques.filter((x) => x.id !== toque.id) }))
           }
         >
-          Remover
+          <Icone nome="lixeira" className="size-4" />
         </button>
       </div>
       <textarea
-        className="min-h-24 w-full rounded-xl border border-stone-300 p-3 text-sm outline-none focus:border-emerald-600"
+        className={`block min-h-28 w-full resize-y p-4 text-sm leading-relaxed outline-none ${whats ? "bg-[#f3fbf6]" : "bg-amber-50/40"}`}
         value={toque.texto}
         onChange={(e) => salvarToque({ ...toque, texto: e.target.value })}
       />
@@ -140,13 +161,16 @@ function EditorToque({ toque }: { toque: Toque }) {
 function Conta() {
   const { email } = useSnap();
   return (
-    <section className="mt-10 rounded-2xl border border-stone-200 bg-white p-4 text-sm">
-      <h2 className="mb-1 font-semibold">Conta</h2>
+    <section className="mt-10 rounded-[1.75rem] border border-stone-200 bg-white p-5 text-sm shadow-sm">
+      <h2 className="mb-2 text-xs font-bold tracking-wider text-stone-400 uppercase">Conta</h2>
       {supabase ? (
         <div className="flex items-center justify-between gap-3">
-          <span className="truncate text-stone-500">{email}</span>
-          <button onClick={() => void sair()} className="shrink-0 font-semibold text-red-600">
-            Sair
+          <span className="truncate font-medium text-stone-600">{email}</span>
+          <button
+            onClick={() => void sair()}
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-red-50 px-3 py-1.5 font-semibold text-red-600"
+          >
+            <Icone nome="sair" className="size-4" /> Sair
           </button>
         </div>
       ) : (
