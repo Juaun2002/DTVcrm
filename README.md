@@ -30,9 +30,10 @@ Abra http://localhost:3000.
 2. **SQL Editor → New query**: cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
 3. **Project Settings → API**: copie a *Project URL* e a chave *publishable* (ou *anon*).
 4. Copie `.env.example` para `.env.local` e preencha os dois valores. Nunca use a chave *secret*/*service_role*.
-5. **Authentication → Users → Add user → Create new user**: seu e-mail e uma senha, marcando **Auto Confirm User**.
-6. **Authentication → Sign In / Providers**: desative **"Allow new users to sign up"**, para ninguém mais criar conta.
-7. Reinicie o `npm run dev` e entre com e-mail e senha. "Manter conectado" deixa a sessão salva no aparelho.
+5. **Authentication → Sign In / Providers → Email**: desative **"Confirm email"**. Assim quem cria conta no app
+   já entra na hora, sem depender de e-mail (o e-mail grátis do Supabase tem limite de ~2 por hora).
+   Mantenha **"Allow new users to sign up"** ligado para outros corretores poderem se cadastrar.
+6. Reinicie o `npm run dev`, toque em **Criar conta** e cadastre-se. Cada conta tem seus próprios leads e scripts.
 
 ### Publicar (Vercel)
 

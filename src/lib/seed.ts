@@ -56,13 +56,13 @@ function cadencia(tipologia: Tipologia): Toque[] {
   return BASE.map((t) => ({ ...t, id: uid(), tipologia }));
 }
 
-export function seed(): Data {
+export function seed(corretora = ""): Data {
   return {
     leads: [],
     toques: [...cadencia("2Q"), ...cadencia("3Q")],
     historico: [],
     config: {
-      corretora: "Patrícia",
+      corretora,
       empreendimento: "Ilha de Mauí",
       pularFimDeSemana: false,
     },

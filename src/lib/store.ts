@@ -89,7 +89,8 @@ async function carregar(user: User) {
 
   // Primeiro acesso: leva o que já estava neste navegador (sem leads de exemplo).
   const local = lerLocal();
-  const inicial = local ? { ...local, leads: local.leads.filter((l) => !l.exemplo) } : seed();
+  const nome = String(user.user_metadata?.nome ?? "").trim().split(/\s+/)[0] ?? "";
+  const inicial = local ? { ...local, leads: local.leads.filter((l) => !l.exemplo) } : seed(nome);
   const { error: e2 } = await supabase!.from(TABELA).insert({ user_id: user.id, data: inicial });
   if (e2) return set({ estado: "erro" });
   set({ data: inicial, estado: "pronto" });
@@ -185,6 +186,11 @@ export function replace(d: Data) {
 export async function entrar(email: string, senha: string, manter: boolean) {
   localStorage.setItem(MANTER, manter ? "1" : "0");
   return supabase!.auth.signInWithPassword({ email, password: senha });
+}
+
+export async function cadastrar(nome: string, email: string, senha: string, manter: boolean) {
+  localStorage.setItem(MANTER, manter ? "1" : "0");
+  return supabase!.auth.signUp({ email, password: senha, options: { data: { nome } } });
 }
 
 export async function sair() {
