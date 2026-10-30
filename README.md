@@ -1,36 +1,43 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CRM · Ilha de Mauí
 
-## Getting Started
+CRM de uma tela só para follow-up de leads pelo WhatsApp (envio manual via link `wa.me`, sem risco de bloqueio).
 
-First, run the development server:
+## Rodar no computador
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Telas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Hoje** — toques do dia (atrasados primeiro). "Enviar WhatsApp" abre a conversa com o texto pronto e já avança a cadência; "Desfazer" aparece por 6 segundos.
+- **Leads** — busca, filtro por status e detalhe de cada lead (cadência, anotações, histórico).
+- **Novo** — nome, WhatsApp, 2Q/3Q, origem.
+- **Scripts** — textos de cada toque, por tipologia. Variáveis: `{nome}`, `{corretora}`, `{empreendimento}`, `{tipologia}`.
 
-## Learn More
+## Onde ficam os dados
 
-To learn more about Next.js, take a look at the following resources:
+- **Sem `.env.local`:** modo local, só no navegador (`localStorage`, chave `crm:v1`).
+- **Com Supabase configurado:** na nuvem, com login por link no e-mail. Sincroniza celular e computador.
+  No primeiro login, o que estava no navegador é enviado para a nuvem.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Ligar o Supabase
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Crie um projeto em https://supabase.com (plano gratuito).
+2. **SQL Editor → New query**: cole o conteúdo de `supabase/schema.sql` e clique em **Run**.
+3. **Project Settings → API**: copie a *Project URL* e a chave *publishable* (ou *anon*).
+4. Copie `.env.example` para `.env.local` e preencha os dois valores. Nunca use a chave *secret*/*service_role*.
+5. Reinicie o `npm run dev`, entre com seu e-mail e clique no link recebido.
+6. Depois do seu primeiro login: **Authentication → Sign In / Providers → desative "Allow new users to sign up"**,
+   para ninguém mais criar conta no seu CRM.
+7. Ao publicar o site, adicione o endereço dele em **Authentication → URL Configuration** (Site URL e Redirect URLs).
 
-## Deploy on Vercel
+## Estrutura
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/lib/types.ts` — modelos (Lead, Toque, Registro, Config)
+- `src/lib/seed.ts` — cadência inicial (scripts padrão)
+- `src/lib/cadencia.ts` — regras (próximo toque, datas, link do WhatsApp) e ações
+- `src/lib/store.ts` — armazenamento

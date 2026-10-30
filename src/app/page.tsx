@@ -1,69 +1,137 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import Link from "next/link";
+import { Carregando } from "@/components/Nav";
+import { useToast } from "@/components/Toast";
+import {
+  concluirToque,
+  linkWhatsApp,
+  mudarStatus,
+  pendentesHoje,
+  preencher,
+  primeiroNome,
+  type Pendente,
+} from "@/lib/cadencia";
+import { useData } from "@/lib/store";
+import type { Config } from "@/lib/types";
+
+export default function Hoje() {
+  const data = useData();
+  if (!data) return <Carregando />;
+
+  const lista = pendentesHoje(data);
+  const msgs = lista.filter((p) => p.toque.canal === "whatsapp").length;
+  const ligacoes = lista.length - msgs;
+  const dataHoje = new Date().toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <header className="mb-5">
+        <p className="text-sm capitalize text-stone-500">{dataHoje}</p>
+        <h1 className="text-2xl font-bold">
+          {lista.length === 0 ? "Tudo em dia" : `Hoje: ${lista.length} follow-up${lista.length > 1 ? "s" : ""}`}
+        </h1>
+        {lista.length > 0 && (
+          <p className="text-sm text-stone-500">
+            {msgs} mensage{msgs === 1 ? "m" : "ns"} · {ligacoes} ligaç{ligacoes === 1 ? "ão" : "ões"}
           </p>
+        )}
+      </header>
+
+      {lista.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-stone-300 p-8 text-center text-stone-500">
+          <p className="text-4xl">🎉</p>
+          <p className="mt-2">Nenhum follow-up pendente.</p>
+          <Link href="/novo" className="mt-4 inline-block font-semibold text-emerald-700">
+            + Cadastrar lead
+          </Link>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+      ) : (
+        <ul className="space-y-3">
+          {lista.map((p) => (
+            <Card key={p.lead.id} p={p} config={data.config} />
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+function Card({ p, config }: { p: Pendente; config: Config }) {
+  const toast = useToast();
+  const { lead, toque, atraso } = p;
+  const texto = preencher(toque.texto, lead, config);
+  const nome = primeiroNome(lead.nome);
+  const whats = toque.canal === "whatsapp";
+
+  const concluir = (msg: string) => toast({ texto: msg, desfazer: concluirToque(lead.id) });
+  const status = (s: "respondeu" | "perdido", label: string) =>
+    toast({ texto: `${nome}: ${label.toLowerCase()}`, desfazer: mudarStatus(lead.id, s, label) });
+
+  return (
+    <li className="rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-2">
+        <Link href={`/leads/${lead.id}`} className="min-w-0">
+          <p className="truncate font-semibold">{lead.nome}</p>
+          <p className="text-sm text-stone-500">
+            {lead.tipologia} · D{toque.dia} · {whats ? "WhatsApp" : "Ligação"}
+          </p>
+        </Link>
+        {atraso > 0 && (
+          <span className="shrink-0 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700">
+            {atraso} dia{atraso > 1 ? "s" : ""} atrasado
+          </span>
+        )}
+      </div>
+
+      <p className="mt-3 line-clamp-3 rounded-lg bg-stone-50 p-3 text-sm text-stone-600">{texto}</p>
+
+      <div className="mt-3 flex gap-2">
+        {whats ? (
           <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+            href={linkWhatsApp(lead.telefone, texto)}
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noreferrer"
+            onClick={() => concluir(`Enviado para ${nome}`)}
+            className="flex-1 rounded-xl bg-emerald-600 py-3 text-center font-semibold text-white active:bg-emerald-700"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
+            Enviar WhatsApp
           </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        ) : (
+          <>
+            <a
+              href={`tel:+${lead.telefone}`}
+              className="flex-1 rounded-xl bg-emerald-600 py-3 text-center font-semibold text-white active:bg-emerald-700"
+            >
+              📞 Ligar
+            </a>
+            <button
+              onClick={() => concluir(`Ligação para ${nome} registrada`)}
+              className="rounded-xl border border-emerald-600 px-4 font-semibold text-emerald-700"
+            >
+              Feito
+            </button>
+          </>
+        )}
+      </div>
+      <div className="mt-2 flex gap-2 text-sm">
+        <button
+          onClick={() => status("respondeu", "Respondeu")}
+          className="flex-1 rounded-lg py-2 text-stone-600 hover:bg-stone-100"
+        >
+          ✅ Respondeu
+        </button>
+        <button
+          onClick={() => status("perdido", "Perdido")}
+          className="flex-1 rounded-lg py-2 text-stone-600 hover:bg-stone-100"
+        >
+          ✖️ Perdido
+        </button>
+      </div>
+    </li>
   );
 }
